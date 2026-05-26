@@ -1,5 +1,7 @@
 use clap::{Parser, Subcommand};
 
+mod cmd;
+
 #[derive(Parser)]
 #[command(name = "mes", version, about = "mesmerizer CLI")]
 struct Cli {
@@ -27,12 +29,9 @@ enum Cmd {
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     match cli.cmd {
-        Cmd::Pack { spec } => println!("pack stub: {spec}"),
-        Cmd::Ask { template, provider } => {
-            println!("ask stub: template={template:?} provider={provider:?}")
-        }
-        Cmd::Decode { text } => println!("decode stub: {text:?}"),
-        Cmd::Scaffold { category } => println!("scaffold stub: {category}"),
+        Cmd::Pack { spec } => cmd::pack::run(spec),
+        Cmd::Ask { template, provider } => cmd::ask::run(template, provider),
+        Cmd::Decode { text } => cmd::decode::run(text),
+        Cmd::Scaffold { category } => cmd::scaffold::run(category),
     }
-    Ok(())
 }
