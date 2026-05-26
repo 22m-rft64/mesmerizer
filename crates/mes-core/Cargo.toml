@@ -1,0 +1,25 @@
+[package]
+name = "mes-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+regex = { workspace = true }
+base64 = { workspace = true }
+hex = { workspace = true }
+urlencoding = { workspace = true }
+directories = { workspace = true }
+walkdir = { workspace = true }
+tree-sitter = { workspace = true }
+tree-sitter-python = { workspace = true }
+tree-sitter-rust = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"

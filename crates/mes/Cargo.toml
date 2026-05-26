@@ -1,0 +1,15 @@
+[package]
+name = "mes"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "mes"
+path = "src/main.rs"
+
+[dependencies]
+mes-core = { path = "../mes-core" }
+clap = { workspace = true }
+anyhow = { workspace = true }
