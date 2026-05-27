@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 
 mod cmd;
+use cmd::teto::TetoCmd;
 
 #[derive(Parser)]
 #[command(name = "mes", version, about = "mesmerizer CLI")]
@@ -31,6 +32,11 @@ enum Cmd {
     },
     /// Scaffold a CTF solve template into current directory
     Scaffold { category: String },
+    /// Teto environment reference management
+    Teto {
+        #[command(subcommand)]
+        cmd: TetoCmd,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -41,5 +47,6 @@ fn main() -> anyhow::Result<()> {
         Cmd::Decode { text } => cmd::decode::run(text),
         Cmd::Conv { op, input } => cmd::conv::run(op, input),
         Cmd::Scaffold { category } => cmd::scaffold::run(category),
+        Cmd::Teto { cmd } => cmd::teto::run(cmd),
     }
 }
