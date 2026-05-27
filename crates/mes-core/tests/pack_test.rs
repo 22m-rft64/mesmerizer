@@ -46,6 +46,37 @@ fn pack_python_function() {
 }
 
 #[test]
+fn pack_inside_function_body_includes_enclosing() {
+    // Selection inside function body (not including def line) should report
+    // the function header in "Enclosing function(s)" since it adds new context.
+    let mut f = NamedTempFile::with_suffix(".py").unwrap();
+    write!(
+        f,
+        "import os\n\ndef foo(name):\n    a = 1\n    b = 2\n    return a + b\n"
+    )
+    .unwrap();
+    let path = f.path().to_string_lossy().to_string();
+    let result = pack(&format!("{path}:4-5")).unwrap();
+    assert!(result.contains("Enclosing function(s)"));
+    assert!(result.contains("def foo(name)"));
+}
+
+#[test]
+fn pack_function_header_in_selection_skips_enclosing() {
+    // Selection includes the def line → enclosing section omits the function
+    // (would duplicate what's already visible in selection).
+    let mut f = NamedTempFile::with_suffix(".py").unwrap();
+    write!(
+        f,
+        "import os\n\ndef foo(name):\n    a = 1\n    b = 2\n    return a + b\n"
+    )
+    .unwrap();
+    let path = f.path().to_string_lossy().to_string();
+    let result = pack(&format!("{path}:3-6")).unwrap();
+    assert!(!result.contains("Enclosing function(s)"));
+}
+
+#[test]
 fn pack_rust_function() {
     let mut f = NamedTempFile::with_suffix(".rs").unwrap();
     write!(

@@ -66,8 +66,11 @@ pub fn extract(
             let node = cap.node;
             let start = node.start_position().row + 1;
             let end = node.end_position().row + 1;
-            if start <= start_line && end >= end_line {
-                // Function header = first line of the node.
+            // Only report as "enclosing" if the function's header line is NOT
+            // visible in the selection itself (otherwise it would duplicate).
+            let header_in_selection = start >= start_line && start <= end_line;
+            let overlaps = !(end < start_line || start > end_line);
+            if overlaps && !header_in_selection {
                 let node_text = &source[node.byte_range()];
                 let first_line_end = node_text.find('\n').unwrap_or(node_text.len());
                 let header = &node_text[..first_line_end];
