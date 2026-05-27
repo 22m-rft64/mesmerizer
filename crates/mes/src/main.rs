@@ -20,8 +20,15 @@ enum Cmd {
         #[arg(short, long)]
         provider: Option<String>,
     },
-    /// Decode and classify text (hex/base64/url/addr)
+    /// Decode and classify text (hex/base64/url/addr) with auto-chain
     Decode { text: Option<String> },
+    /// Explicit CTF conversions (l2b, b2l, h2b, b2h, bin, b32d)
+    Conv {
+        /// Operation: l2b | b2l | h2b | b2h | bin | b32d
+        op: String,
+        /// Input text; if absent, read from stdin
+        input: Option<String>,
+    },
     /// Scaffold a CTF solve template into current directory
     Scaffold { category: String },
 }
@@ -32,6 +39,7 @@ fn main() -> anyhow::Result<()> {
         Cmd::Pack { spec } => cmd::pack::run(spec),
         Cmd::Ask { template, provider } => cmd::ask::run(template, provider),
         Cmd::Decode { text } => cmd::decode::run(text),
+        Cmd::Conv { op, input } => cmd::conv::run(op, input),
         Cmd::Scaffold { category } => cmd::scaffold::run(category),
     }
 }

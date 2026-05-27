@@ -1,3 +1,4 @@
+pub mod convert;
 pub mod decode;
 pub mod error;
 pub mod pack;

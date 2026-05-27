@@ -24,3 +24,5 @@ clap = { version = "4", features = ["derive"] }
 tree-sitter = "0.25"
 tree-sitter-python = "0.25"
 tree-sitter-rust = "0.24"
+num-bigint = "0.4"
+num-traits = "0.2"

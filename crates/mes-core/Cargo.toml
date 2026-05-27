@@ -20,6 +20,8 @@ walkdir = { workspace = true }
 tree-sitter = { workspace = true }
 tree-sitter-python = { workspace = true }
 tree-sitter-rust = { workspace = true }
+num-bigint = { workspace = true }
+num-traits = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"
