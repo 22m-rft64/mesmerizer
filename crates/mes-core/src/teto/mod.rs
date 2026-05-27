@@ -3,6 +3,7 @@ pub mod env_ref;
 pub mod error;
 pub mod exec;
 pub mod header;
+pub mod render;
 pub mod store;
 
 pub use env_ref::EnvRef;
