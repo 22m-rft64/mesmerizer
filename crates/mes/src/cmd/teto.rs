@@ -33,6 +33,12 @@ pub enum TetoCmd {
         #[arg(long)]
         apply: bool,
     },
+    /// Fix a known issue by id (from env_ref `repair[].id`)
+    Repair {
+        issue: String,
+        #[arg(long)]
+        apply: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -54,6 +60,7 @@ pub fn run(cmd: TetoCmd) -> anyhow::Result<()> {
         },
         TetoCmd::Doctor { category, json, no_color } => doctor_cmd(category, json, no_color),
         TetoCmd::Setup { name, apply } => setup_cmd(&name, apply),
+        TetoCmd::Repair { issue, apply } => repair_cmd(&issue, apply),
     }
 }
 
@@ -108,6 +115,24 @@ fn setup_cmd(name: &str, apply: bool) -> anyhow::Result<()> {
     }
     mes_core::teto::setup::apply(&plan, er).map_err(anyhow::Error::from)?;
     println!("\ndone.");
+    Ok(())
+}
+
+fn repair_cmd(issue_id: &str, apply: bool) -> anyhow::Result<()> {
+    let root = store::default_root();
+    let refs = store::load_env_refs(&root).map_err(anyhow::Error::from)?;
+    let plan = mes_core::teto::repair::plan_repair(&refs, issue_id)
+        .map_err(anyhow::Error::from)?;
+    print!("{}", mes_core::teto::repair::render_plan(&plan));
+    if !apply {
+        println!("\n(dry-run; pass --apply to execute the fix)");
+        return Ok(());
+    }
+    use mes_core::teto::repair::RepairOutcome;
+    match mes_core::teto::repair::apply_repair(&plan).map_err(anyhow::Error::from)? {
+        RepairOutcome::Skipped => println!("\nskipped (detect already passes)."),
+        RepairOutcome::Applied { .. } => println!("\napplied."),
+    }
     Ok(())
 }
 

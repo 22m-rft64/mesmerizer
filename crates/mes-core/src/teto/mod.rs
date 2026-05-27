@@ -6,6 +6,7 @@ pub mod exec;
 pub mod header;
 pub mod mcp;
 pub mod render;
+pub mod repair;
 pub mod setup;
 pub mod store;
 
