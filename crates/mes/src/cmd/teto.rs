@@ -26,6 +26,13 @@ pub enum TetoCmd {
         #[arg(long)]
         no_color: bool,
     },
+    /// Deploy a curated toolkit and/or patch MCP config
+    Setup {
+        /// env_ref name (from frontmatter `name:` field)
+        name: String,
+        #[arg(long)]
+        apply: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -46,6 +53,7 @@ pub fn run(cmd: TetoCmd) -> anyhow::Result<()> {
             McpCmd::List { json, no_color } => mcp_list_cmd(json, no_color),
         },
         TetoCmd::Doctor { category, json, no_color } => doctor_cmd(category, json, no_color),
+        TetoCmd::Setup { name, apply } => setup_cmd(&name, apply),
     }
 }
 
@@ -82,6 +90,24 @@ fn doctor_cmd(
         println!();
         print!("{}", mes_core::teto::render::doctor_text(&report, no_color));
     }
+    Ok(())
+}
+
+fn setup_cmd(name: &str, apply: bool) -> anyhow::Result<()> {
+    let root = store::default_root();
+    let refs = store::load_env_refs(&root).map_err(anyhow::Error::from)?;
+    let er = refs
+        .iter()
+        .find(|r| r.name == name)
+        .ok_or_else(|| anyhow::anyhow!("env_ref `{name}` not found in {}", root.display()))?;
+    let plan = mes_core::teto::setup::plan_setup(er);
+    print!("{}", mes_core::teto::setup::render_plan(&plan));
+    if !apply {
+        println!("\n(dry-run; pass --apply to execute)");
+        return Ok(());
+    }
+    mes_core::teto::setup::apply(&plan, er).map_err(anyhow::Error::from)?;
+    println!("\ndone.");
     Ok(())
 }
 
