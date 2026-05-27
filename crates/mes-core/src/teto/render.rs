@@ -138,6 +138,105 @@ pub fn mcp_list_json(entries: &[McpEntry]) -> Result<String, serde_json::Error> 
     serde_json::to_string_pretty(&arr)
 }
 
+use crate::teto::doctor::DoctorReport;
+
+pub fn doctor_text(report: &DoctorReport, no_color: bool) -> String {
+    let mut out = String::new();
+
+    out.push_str("system\n");
+    out.push_str(&format!("  os: {}\n", report.sys.os));
+    out.push_str(&format!("  arch: {}\n", report.sys.arch));
+    out.push_str(&format!("  shell: {}\n", report.sys.shell));
+    out.push_str("  key tools:\n");
+    for t in &report.sys.key_tools {
+        let v = t.version.as_deref().unwrap_or("(not found)");
+        out.push_str(&format!("    {:<10} {}\n", t.name, v));
+    }
+    out.push('\n');
+
+    out.push_str(&format!("env_refs: {}\n", report.env_refs.len()));
+    for r in &report.env_refs {
+        out.push_str(&format!(
+            "  - {}  [{}]  {}\n",
+            r.name, r.category, r.description
+        ));
+    }
+    out.push('\n');
+
+    out.push_str("checks:\n");
+    out.push_str(&check_text(&report.checks, no_color));
+    out.push('\n');
+
+    out.push_str("mcp servers:\n");
+    out.push_str(&mcp_list_text(&report.mcps, no_color));
+
+    out
+}
+
+pub fn doctor_json(report: &DoctorReport) -> Result<String, serde_json::Error> {
+    let key_tools: Vec<_> = report
+        .sys
+        .key_tools
+        .iter()
+        .map(|t| serde_json::json!({ "name": t.name, "version": t.version }))
+        .collect();
+    let env_refs: Vec<_> = report
+        .env_refs
+        .iter()
+        .map(|r| {
+            serde_json::json!({
+                "name": r.name,
+                "category": r.category,
+                "description": r.description,
+            })
+        })
+        .collect();
+    let check_status = |s: &crate::teto::check::CheckStatus| match s {
+        crate::teto::check::CheckStatus::Pass => "pass",
+        crate::teto::check::CheckStatus::Fail { .. } => "fail",
+        crate::teto::check::CheckStatus::ExecError { .. } => "error",
+    };
+    let checks: Vec<_> = report
+        .checks
+        .iter()
+        .map(|c| {
+            serde_json::json!({
+                "env_ref": c.env_ref,
+                "category": c.category,
+                "id": c.id,
+                "desc": c.desc,
+                "status": check_status(&c.status),
+            })
+        })
+        .collect();
+    let mcps: Vec<_> = report
+        .mcps
+        .iter()
+        .map(|m| {
+            serde_json::json!({
+                "id": m.id,
+                "env_ref": m.env_ref,
+                "transport": m.transport,
+                "server_cmd": m.server_cmd,
+                "available_for": m.available_for,
+            })
+        })
+        .collect();
+    let payload = serde_json::json!({
+        "system": {
+            "os": report.sys.os,
+            "arch": report.sys.arch,
+            "shell": report.sys.shell,
+            "path": report.sys.path,
+            "key_tools": key_tools,
+        },
+        "env_refs": env_refs,
+        "checks": checks,
+        "mcps": mcps,
+    });
+    serde_json::to_string_pretty(&payload)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

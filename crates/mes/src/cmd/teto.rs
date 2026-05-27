@@ -17,6 +17,15 @@ pub enum TetoCmd {
         #[command(subcommand)]
         cmd: McpCmd,
     },
+    /// Comprehensive system + env_refs + checks + mcp dump
+    Doctor {
+        #[arg(short, long)]
+        category: Option<String>,
+        #[arg(long)]
+        json: bool,
+        #[arg(long)]
+        no_color: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -36,6 +45,7 @@ pub fn run(cmd: TetoCmd) -> anyhow::Result<()> {
         TetoCmd::Mcp { cmd } => match cmd {
             McpCmd::List { json, no_color } => mcp_list_cmd(json, no_color),
         },
+        TetoCmd::Doctor { category, json, no_color } => doctor_cmd(category, json, no_color),
     }
 }
 
@@ -53,6 +63,24 @@ fn check_cmd(category: Option<String>, json: bool, no_color: bool) -> anyhow::Re
         header::print_sprite();
         println!();
         print!("{}", render::check_text(&results, no_color));
+    }
+    Ok(())
+}
+
+fn doctor_cmd(
+    category: Option<String>,
+    json: bool,
+    no_color: bool,
+) -> anyhow::Result<()> {
+    let report = mes_core::teto::doctor::collect(category.as_deref())
+        .map_err(anyhow::Error::from)?;
+    if json {
+        let s = mes_core::teto::render::doctor_json(&report).map_err(anyhow::Error::from)?;
+        println!("{s}");
+    } else {
+        header::print_sprite();
+        println!();
+        print!("{}", mes_core::teto::render::doctor_text(&report, no_color));
     }
     Ok(())
 }

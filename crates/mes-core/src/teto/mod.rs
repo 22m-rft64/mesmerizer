@@ -1,4 +1,5 @@
 pub mod check;
+pub mod doctor;
 pub mod env_ref;
 pub mod error;
 pub mod exec;
