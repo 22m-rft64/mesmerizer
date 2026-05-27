@@ -1,4 +1,5 @@
 use crate::teto::check::{CheckResult, CheckStatus};
+use crate::teto::mcp::McpEntry;
 use colored::Colorize;
 use std::collections::BTreeMap;
 
@@ -94,6 +95,49 @@ pub fn check_json(results: &[CheckResult]) -> Result<String, serde_json::Error> 
     serde_json::to_string_pretty(&payload)
 }
 
+pub fn mcp_list_text(entries: &[McpEntry], no_color: bool) -> String {
+    if entries.is_empty() {
+        return "(no MCP servers declared in any env_ref)\n".into();
+    }
+    let mut out = String::new();
+    for e in entries {
+        let id_styled = if no_color {
+            e.id.clone()
+        } else {
+            e.id.bold().to_string()
+        };
+        out.push_str(&format!(
+            "{}  ({})\n  from: {}\n  installable for: {}\n  cmd: {}\n\n",
+            id_styled,
+            e.transport,
+            e.env_ref,
+            if e.available_for.is_empty() {
+                "(none)".into()
+            } else {
+                e.available_for.join(", ")
+            },
+            e.server_cmd.join(" "),
+        ));
+    }
+    out
+}
+
+pub fn mcp_list_json(entries: &[McpEntry]) -> Result<String, serde_json::Error> {
+    let arr: Vec<_> = entries
+        .iter()
+        .map(|e| {
+            serde_json::json!({
+                "id": e.id,
+                "env_ref": e.env_ref,
+                "transport": e.transport,
+                "server_cmd": e.server_cmd,
+                "available_for": e.available_for,
+            })
+        })
+        .collect();
+    serde_json::to_string_pretty(&arr)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -148,5 +192,26 @@ mod tests {
         assert_eq!(parsed["summary"]["pass"], 1);
         assert_eq!(parsed["summary"]["fail"], 1);
         assert_eq!(parsed["summary"]["total"], 2);
+    }
+
+    #[test]
+    fn render_mcp_list_text_empty() {
+        let s = mcp_list_text(&[], true);
+        assert!(s.contains("(no MCP servers"));
+    }
+
+    #[test]
+    fn render_mcp_list_json_array() {
+        let e = McpEntry {
+            env_ref: "tk".into(),
+            id: "teto".into(),
+            transport: "stdio".into(),
+            server_cmd: vec!["teto-mcp".into()],
+            available_for: vec!["claude".into(), "codex".into()],
+        };
+        let j = mcp_list_json(&[e]).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&j).unwrap();
+        assert_eq!(v[0]["id"], "teto");
+        assert_eq!(v[0]["available_for"].as_array().unwrap().len(), 2);
     }
 }
