@@ -6,6 +6,9 @@ function M.defaults()
     sync = {
       enabled = true,
       notify = true,
+      fade_ms = 4000, -- highlight fade timeout in ms after reload
+      -- highlights = { MesmerizerSyncAdded = { bg = "#...", fg = "..." }, ... }
+      highlights = nil,
     },
     diff = {
       enabled = true,
