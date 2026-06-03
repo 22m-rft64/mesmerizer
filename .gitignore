@@ -12,3 +12,6 @@ Cargo.lock
 
 # docs
 docs/
+
+# notes
+NOTES*.md
